@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>6</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header { padding: 6px 10%; }
+        h1 { display: inline-block; margin-right: 20px; color: #001323; }
+        h2 { display: inline-block; color: #001323; }
+        #map { width: 80%; height: 540px; margin: 10px auto; }
+        footer { padding: 6px 10%; width: 80%; }
+        p { font-size: 1em; color: #001323; }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>US Electric Power Generation Sources</h1>
+        <h2>Interactive map of US energy sources : Biomass, Geothermal, and Solar</h2>
+    </header>
+
+    <div id='map'></div>
+
+    <footer>
+        <p>Map authored by Nora Esack</p>
+        <p>Power plant data utilized for map</p>
+        <p>Circle turns red to flag it is over 1000 MW. Otherwise, if it is under 1000 MW it keeps it as a normal color.</p>
+        <p>This helps users identify if there is an outlier, which helps with them understand the map better.</p>
+
+
+    </footer>
+
+    <script src="power-plants.js"></script>
+    <script>
+
+      var map = L.map('map', {
+          center: [36, -94],
+          zoom: 4,
+      });
+
+      var tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
+      });
+      tiles.addTo(map);
+
+      // Reduced multiplier from 0.8 to 0.3 to declutter overlapping symbols
+     function getRadius(area) {
+    var radius = Math.sqrt(area / Math.PI);
+    return radius * 0.5;
+}
+
+
+      var Biomass = L.geoJson(plants, {
+          pointToLayer: function(feature, latlng) {
+              return L.circleMarker(latlng, {
+                  color: 'blue',
+                  weight: 1,
+                  fillColor: 'aqua',
+                  fillOpacity: .5,
+                  radius: getRadius(feature.properties.capacity_mw)
+              });
+          },
+          filter: function(feature, layer) {
+              if (feature.properties.fuel_source['Biomass']) {
+                  return feature
+              };
+          },
+          onEachFeature: function(feature, layer) {
+              layer.on('mouseover', function() {
+                  if (feature.properties.capacity_mw > 1000) {
+                      layer.setStyle({ fillColor: 'red' });
+                  } else {
+                      layer.setStyle({ fillColor: 'aqua' });
+                  }
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({ fillColor: 'aqua' });
+              });
+              var name = feature.properties.plant_name;
+              var capacity = feature.properties.capacity_mw.toLocaleString();
+              var surprise = feature.properties.capacity_mw > 1000 ? '<br><b style="color:red;">⚠ Unusually High Capacity</b>' : '';
+              layer.bindPopup('<b>' + name + '</b><br>' + capacity + ' MW' + surprise);
+          }
+      }).addTo(map);
+
+      var Geothermal = L.geoJson(plants, {
+          pointToLayer: function(feature, latlng) {
+              return L.circleMarker(latlng, {
+                  color: 'purple',
+                  weight: 1,
+                  fillColor: 'violet',
+                  fillOpacity: .5,
+                  radius: getRadius(feature.properties.capacity_mw)
+              });
+          },
+          filter: function(feature, layer) {
+              if (feature.properties.fuel_source['Geothermal']) {
+                  return feature
+              };
+          },
+          onEachFeature: function(feature, layer) {
+              layer.on('mouseover', function() {
+                  if (feature.properties.capacity_mw > 1000) {
+                      layer.setStyle({ fillColor: 'red' });
+                  } else {
+                      layer.setStyle({ fillColor: 'violet' });
+                  }
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({ fillColor: 'violet' });
+              });
+              var name = feature.properties.plant_name;
+              var capacity = feature.properties.capacity_mw.toLocaleString();
+              var surprise = feature.properties.capacity_mw > 1000 ? '<br><b style="color:red;">⚠ Unusually High Capacity</b>' : '';
+              layer.bindPopup('<b>' + name + '</b><br>' + capacity + ' MW' + surprise);
+          }
+      }).addTo(map);
+
+      var Solar = L.geoJson(plants, {
+          pointToLayer: function(feature, latlng) {
+              return L.circleMarker(latlng, {
+                  color: 'orange',
+                  weight: 1,
+                  fillColor: 'yellow',
+                  fillOpacity: .5,
+                  radius: getRadius(feature.properties.capacity_mw)
+              });
+          },
+          filter: function(feature, layer) {
+              if (feature.properties.fuel_source['Solar']) {
+                  return feature
+              };
+          },
+          onEachFeature: function(feature, layer) {
+              layer.on('mouseover', function() {
+                  if (feature.properties.capacity_mw > 1000) {
+                      layer.setStyle({ fillColor: 'red' });
+                  } else {
+                      layer.setStyle({ fillColor: 'yellow' });
+                  }
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({ fillColor: 'yellow' });
+              });
+              var name = feature.properties.plant_name;
+              var capacity = feature.properties.capacity_mw.toLocaleString();
+              var surprise = feature.properties.capacity_mw > 1000 ? '<br><b style="color:red;">⚠ Unusually High Capacity</b>' : '';
+              layer.bindPopup('<b>' + name + '</b><br>' + capacity + ' MW' + surprise);
+          }
+      }).addTo(map);
+
+      var sourceLayers = {
+          "<b style='color:aqua'>Biomass</b>": Biomass,
+          "<b style='color:violet'>Geothermal</b>": Geothermal,
+          "<b style='color:yellow'>Solar</b>": Solar
+      };
+      L.control.layers(null, sourceLayers, {collapsed: false}).addTo(map);
+
+    </script>
+
+</body>
+</html>
